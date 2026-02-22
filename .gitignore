@@ -1,0 +1,7 @@
+data/01_tmdb.csv
+data/02_omdb.csv
+data/03_awards_season.csv
+data/master_dataset.csv
+__pycache__/nominees_ground_truth.cpython-313.pyc
+__pycache__/config.cpython-313.pyc
+config.py
