@@ -15,7 +15,7 @@ from pathlib import Path
 import requests
 import pandas as pd
 
-from config import OMDB_API_KEY, DATA_DIR
+from Scripts.config import OMDB_API_KEY, DATA_DIR
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
