@@ -16,8 +16,8 @@ import requests
 import pandas as pd
 
 # ── local imports ─────────────────────────────────────────────────────────────
-from nominees_ground_truth import OSCAR_BEST_PICTURE
-from config import TMDB_API_KEY, DATA_DIR
+from Scripts.nominees_ground_truth import OSCAR_BEST_PICTURE
+from Scripts.config import TMDB_API_KEY, DATA_DIR
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
