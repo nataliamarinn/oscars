@@ -13,12 +13,37 @@ from pathlib import Path
 
 import pandas as pd
 import numpy as np
-from rapidfuzz import process, fuzz   # pip install rapidfuzz
+from rapidfuzz import process, fuzz
 
 from Scripts.config import DATA_DIR
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
+
+# ── Fechas históricas de las ceremonias de los Oscars ─────────────────────────
+CEREMONY_DATES = {
+    2005: "2005-02-27",
+    2006: "2006-03-05",
+    2007: "2007-02-25",
+    2008: "2008-02-24",
+    2009: "2009-02-22",
+    2010: "2010-03-07",
+    2011: "2011-02-27",
+    2012: "2012-02-26",
+    2013: "2013-02-24",
+    2014: "2014-03-02",
+    2015: "2015-02-22",
+    2016: "2016-02-28",
+    2017: "2017-02-26",
+    2018: "2018-03-04",
+    2019: "2019-02-24",
+    2020: "2020-02-09",
+    2021: "2021-04-25",
+    2022: "2022-03-27",
+    2023: "2023-03-12",
+    2024: "2024-03-10",
+    2025: "2025-03-02",
+}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -69,6 +94,11 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     # ── Release month ─────────────────────────────────────────────────────
     df["release_month"] = pd.to_datetime(df["release_date"], errors="coerce").dt.month
     df["is_q4_release"] = df["release_month"].isin([10, 11, 12]).astype(int)
+
+    # ── Días entre estreno y ceremonia ────────────────────────────────────
+    release_dt  = pd.to_datetime(df["release_date"], errors="coerce")
+    ceremony_dt = pd.to_datetime(df["ceremony_year"].map(CEREMONY_DATES), errors="coerce")
+    df["days_to_ceremony"] = (ceremony_dt - release_dt).dt.days
 
     # ── Idioma ────────────────────────────────────────────────────────────
     df["is_english"] = (df["original_language"] == "en").astype(int)
@@ -150,7 +180,7 @@ def build_master() -> pd.DataFrame:
     # ── Feature engineering ───────────────────────────────────────────────
     df = engineer_features(df)
 
-    # ── Guardar solo CSV ──────────────────────────────────────────────────
+    # ── Guardar ──────────────────────────────────────────────────────────
     out_csv = data_dir / "master_dataset.csv"
     df.to_csv(out_csv, index=False)
     log.info(f"Master dataset guardado: {df.shape[0]} filas x {df.shape[1]} cols")
@@ -169,5 +199,6 @@ if __name__ == "__main__":
         "imdb_rating", "rt_score", "metacritic",
         "budget_m", "revenue_m",
         "total_precursor_wins", "critic_composite",
+        "days_to_ceremony",
     ]
     print(df[[c for c in key_cols if c in df.columns]].head())
