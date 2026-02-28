@@ -1,4 +1,3 @@
-
 """
 Step 3 — Awards Season scraper (Wikipedia)
 Scrapes Best Film / Best Picture / Best Motion Picture equivalent from:
@@ -7,11 +6,12 @@ Scrapes Best Film / Best Picture / Best Motion Picture equivalent from:
   - Golden Globes (Best Motion Picture — Drama + Comedy/Musical)
   - Critics Choice Awards (Best Picture)
   - Producers Guild (PGA Award for Theatrical Motion Pictures)
+  - Cannes (Palme d'Or)
 
 For each award we track: nominee, won (1/0), ceremony_year.
 Then merge with our base df to produce per-film award features.
 
-Output: data/03_awards_season.parquet
+Output: data/03_awards_season.csv
 """
 
 import time
@@ -44,28 +44,23 @@ def _wiki_soup(page_title: str) -> BeautifulSoup:
     return BeautifulSoup(r.text, "html.parser")
 
 
-def _extract_wikitable_rows(soup: BeautifulSoup) -> list[BeautifulSoup]:
-    """Return all <tr> rows from the first wikitable on the page."""
-    table = soup.find("table", class_="wikitable")
-    if not table:
-        return []
-    return table.find_all("tr")
-
-
 def _clean(text: str) -> str:
-    return re.sub(r"\[.*?\]", "", text).strip()
+    text = re.sub(r"\[.*?\]", "", text)
+    text = re.sub(r"[§†‡*]", "", text)   # footnote symbols de Wikipedia
+    return text.strip()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  Award-specific parsers
-#  Each returns a list of dicts: {ceremony_year, film, won}
+#  Each returns a list of dicts: {ceremony_year, film, award, won}
 # ─────────────────────────────────────────────────────────────────────────────
 
 def scrape_bafta_best_film(years: list[int]) -> list[dict]:
     """
     Wikipedia page: 'BAFTA_Award_for_Best_Film'
-    Table cols: Year | Film | Director | Production company | Ref
-    Winner row has background colour or bold — we detect via <b> tag.
+    Table cols: Year | Film | Director | Production company
+    Year cell uses rowspan → film_idx shifts depending on whether year cell is present.
+    Winner detected via <b> tag or background style.
     """
     soup = _wiki_soup("BAFTA_Award_for_Best_Film")
     records = []
@@ -76,30 +71,36 @@ def scrape_bafta_best_film(years: list[int]) -> list[dict]:
         if not cells:
             continue
 
-        # year column
         year_text = _clean(cells[0].get_text())
-        if re.fullmatch(r"(19|20)\d{2}", year_text):
-            current_year = int(year_text) + 1   # BAFTA year → ceremony year
+        has_year = bool(re.fullmatch(r"(19|20)\d{2}", year_text))
+        if has_year:
+            current_year = int(year_text) + 1   # BAFTA year → Oscar ceremony year
+
         if current_year is None or current_year not in years:
             continue
 
-        # film title — usually 2nd cell
-        if len(cells) < 2:
+        # When year cell is present (rowspan row): film at [1]
+        # When year cell is absent (subsequent rows): film at [0]
+        film_idx = 1 if has_year else 0
+        if len(cells) <= film_idx:
             continue
-        film = _clean(cells[1].get_text())
+
+        film = _clean(cells[film_idx].get_text())
         if not film or film.lower() in ("film", "year"):
             continue
 
-        # winner = bold text in the film cell
-        won = bool(cells[1].find("b") or row.get("style", "").startswith("background"))
-        records.append({"ceremony_year": current_year, "film": film, "award": "BAFTA_best_film", "won": int(won)})
+        won = bool(cells[film_idx].find("b") or row.get("style", "").startswith("background"))
+        records.append({"ceremony_year": current_year, "film": film,
+                        "award": "BAFTA_best_film", "won": int(won)})
 
     return records
 
 
 def scrape_sag_outstanding_cast(years: list[int]) -> list[dict]:
     """
-    Wikipedia page: 'Screen_Actors_Guild_Award_for_Outstanding_Cast_in_a_Motion_Picture'
+    Wikipedia page: 'Screen_Actors_Guild_Award_for_Outstanding_Performance_by_a_Cast_in_a_Motion_Picture'
+    Year cell format: '2024 (31st Annual...)' — uses re.search not fullmatch.
+    Year cell uses rowspan → same film_idx logic as BAFTA.
     """
     soup = _wiki_soup("Screen_Actors_Guild_Award_for_Outstanding_Performance_by_a_Cast_in_a_Motion_Picture")
     records = []
@@ -109,19 +110,26 @@ def scrape_sag_outstanding_cast(years: list[int]) -> list[dict]:
         cells = row.find_all(["td", "th"])
         if not cells:
             continue
-        year_text = _clean(cells[0].get_text())
-        if re.fullmatch(r"(19|20)\d{2}", year_text):
-            # SAG year = ceremony year
-            current_year = int(year_text)
+
+        m = re.search(r"(19|20)\d{2}", _clean(cells[0].get_text()))
+        has_year = bool(m)
+        if has_year:
+            current_year = int(m.group())   # SAG ceremony year = Oscar ceremony year
+
         if current_year is None or current_year not in years:
             continue
-        if len(cells) < 2:
+
+        film_idx = 1 if has_year else 0
+        if len(cells) <= film_idx:
             continue
-        film = _clean(cells[1].get_text())
+
+        film = _clean(cells[film_idx].get_text())
         if not film or film.lower() in ("film", "year"):
             continue
-        won = bool(cells[1].find("b") or row.get("style", ""))
-        records.append({"ceremony_year": current_year, "film": film, "award": "SAG_outstanding_cast", "won": int(won)})
+
+        won = bool(cells[film_idx].find("b"))
+        records.append({"ceremony_year": current_year, "film": film,
+                        "award": "SAG_outstanding_cast", "won": int(won)})
 
     return records
 
@@ -138,9 +146,7 @@ def scrape_golden_globes_drama(years: list[int]) -> list[dict]:
         cells = row.find_all(["td", "th"])
         if not cells:
             continue
-        year_text = _clean(cells[0].get_text())
-        # e.g. "2024" or "2024 (81st)"
-        m = re.search(r"(20\d{2})", year_text)
+        m = re.search(r"(20\d{2})", _clean(cells[0].get_text()))
         if m:
             current_year = int(m.group(1))
         if current_year is None or current_year not in years:
@@ -151,12 +157,16 @@ def scrape_golden_globes_drama(years: list[int]) -> list[dict]:
         if not film or film.lower() in ("film", "year"):
             continue
         won = bool(cells[1].find("b"))
-        records.append({"ceremony_year": current_year, "film": film, "award": "GG_drama", "won": int(won)})
+        records.append({"ceremony_year": current_year, "film": film,
+                        "award": "GG_drama", "won": int(won)})
 
     return records
 
 
 def scrape_golden_globes_comedy(years: list[int]) -> list[dict]:
+    """
+    Wikipedia: 'Golden_Globe_Award_for_Best_Motion_Picture_–_Musical_or_Comedy'
+    """
     soup = _wiki_soup("Golden_Globe_Award_for_Best_Motion_Picture_–_Musical_or_Comedy")
     records = []
     current_year = None
@@ -176,7 +186,8 @@ def scrape_golden_globes_comedy(years: list[int]) -> list[dict]:
         if not film or film.lower() in ("film", "year"):
             continue
         won = bool(cells[1].find("b"))
-        records.append({"ceremony_year": current_year, "film": film, "award": "GG_comedy", "won": int(won)})
+        records.append({"ceremony_year": current_year, "film": film,
+                        "award": "GG_comedy", "won": int(won)})
 
     return records
 
@@ -204,7 +215,8 @@ def scrape_critics_choice(years: list[int]) -> list[dict]:
         if not film or film.lower() in ("film", "year"):
             continue
         won = bool(cells[1].find("b"))
-        records.append({"ceremony_year": current_year, "film": film, "award": "CCA_best_picture", "won": int(won)})
+        records.append({"ceremony_year": current_year, "film": film,
+                        "award": "CCA_best_picture", "won": int(won)})
 
     return records
 
@@ -232,7 +244,46 @@ def scrape_pga(years: list[int]) -> list[dict]:
         if not film or film.lower() in ("film", "year"):
             continue
         won = bool(cells[1].find("b"))
-        records.append({"ceremony_year": current_year, "film": film, "award": "PGA_best_picture", "won": int(won)})
+        records.append({"ceremony_year": current_year, "film": film,
+                        "award": "PGA_best_picture", "won": int(won)})
+
+    return records
+
+
+def scrape_cannes_palme_dor(years: list[int]) -> list[dict]:
+    """
+    Wikipedia: 'Palme_d%27Or'
+    Solo lista ganadores (no nominees).
+    Cannes ocurre en mayo → año Cannes + 1 = Oscar ceremony_year.
+    Year cell puede tener texto extra o rowspan (ties) → re.search + film_idx dinámico.
+    """
+    soup = _wiki_soup("Palme_d%27Or")
+    records = []
+    current_year = None
+
+    for row in soup.select("table.wikitable tr"):
+        cells = row.find_all(["td", "th"])
+        if not cells:
+            continue
+
+        m = re.search(r"(19|20)\d{2}", _clean(cells[0].get_text()))
+        has_year = bool(m)
+        if has_year:
+            current_year = int(m.group()) + 1   # Cannes año → Oscar ceremony año
+
+        if current_year is None or current_year not in years:
+            continue
+
+        film_idx = 1 if has_year else 0
+        if len(cells) <= film_idx:
+            continue
+
+        film = _clean(cells[film_idx].get_text())
+        if not film or film.lower() in ("film", "year"):
+            continue
+
+        records.append({"ceremony_year": current_year, "film": film,
+                        "award": "cannes_palme_dor", "won": 1})
 
     return records
 
@@ -244,16 +295,14 @@ def scrape_pga(years: list[int]) -> list[dict]:
 def pivot_awards(records: list[dict]) -> pd.DataFrame:
     """
     Input: flat list of {ceremony_year, film, award, won}
-    Output: wide df with columns like bafta_nominated, bafta_won, sag_nominated, ...
+    Output: wide df with columns like bafta_best_film_won, bafta_best_film_nominated, ...
     """
     df = pd.DataFrame(records)
     if df.empty:
         return df
 
-    # one row per (year, film, award), keep max won (some films appear multiple times)
     df = df.groupby(["ceremony_year", "film", "award"])["won"].max().reset_index()
 
-    # pivot
     wide = df.pivot_table(
         index=["ceremony_year", "film"],
         columns="award",
@@ -262,12 +311,10 @@ def pivot_awards(records: list[dict]) -> pd.DataFrame:
         fill_value=0,
     ).reset_index()
 
-    # add _nominated columns (1 for any appearance)
-    # (they all appear if they're in the table, won or not)
     wide.columns.name = None
     for award in df["award"].unique():
         if award in wide.columns:
-            wide[f"{award}_nominated"] = 1  # if they appear they were nominated
+            wide[f"{award}_nominated"] = 1
             wide.rename(columns={award: f"{award}_won"}, inplace=True)
 
     return wide
@@ -298,6 +345,9 @@ def build_awards_season_df(years: list[int]) -> pd.DataFrame:
 
     log.info("Scraping PGA...")
     records += scrape_pga(years)
+
+    log.info("Scraping Cannes Palme d'Or...")
+    records += scrape_cannes_palme_dor(years)
 
     log.info(f"Total raw award rows: {len(records)}")
 
