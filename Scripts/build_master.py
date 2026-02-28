@@ -101,7 +101,9 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     df["days_to_ceremony"] = (ceremony_dt - release_dt).dt.days
 
     # ── Idioma ────────────────────────────────────────────────────────────
-    df["is_english"] = (df["original_language"] == "en").astype(int)
+    df["main_language"] = df["language"].str.split(",").str[0].str.strip()
+    df["is_english"]    = df["main_language"].str.contains("English", na=False).astype(int)
+    
 
     # ── Awards season: total wins / noms ─────────────────────────────────
     award_won_cols = [c for c in df.columns if c.endswith("_won")]
