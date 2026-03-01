@@ -57,16 +57,29 @@ def _clean(text: str) -> str:
 SKIP_TEXTS = {"film", "película", "year", "año", "titre", ""}
 
 
+def _films_from_cell(cell) -> list[str]:
+    """Extrae títulos de films de una celda, manejando celdas con múltiples <a> links."""
+    links = [_clean(a.get_text()) for a in cell.find_all("a", href=True)]
+    links = [f for f in links if f.lower() not in SKIP_TEXTS]
+    if links:
+        return links
+    text = _clean(cell.get_text())
+    return [text] if text.lower() not in SKIP_TEXTS else []
+
+
 def scrape_award_from_url(
     url: str,
     award_name: str,
     years: list[int],
-    year_offset: int = 0,
+    year_offset: int = 1,
 ) -> list[dict]:
     """
     Parsea la primera wikitable de la URL dada.
 
-    Dos variantes de tabla Wikipedia:
+    year_offset=1 porque Wikipedia lista el año del film (ej. 2008),
+    pero TMDB usa el año de la ceremonia Oscar (ej. 2009 = film_year + 1).
+
+    Tres variantes de tabla Wikipedia:
       1) Año + ganadora en la misma fila (año con rowspan):
          | 2021 | Nomadland   |  ← ganadora
          |      | Promising.. |  ← nominada
@@ -75,6 +88,10 @@ def scrape_award_from_url(
          | 2021 (colspan) |
          | Nomadland      |  ← primera fila = ganadora
          | Promising..    |  ← nominada
+
+      3) Año + ganadora, luego otra fila mismo año con todos los nominados en una celda:
+         | 2021 | CODA        |  ← ganadora
+         | 2021 | [Belfast][Drive My Car]... |  ← nominados en un solo <td>
     """
     soup = _wiki_soup_url(url)
     records = []
@@ -91,21 +108,32 @@ def scrape_award_from_url(
 
         if m:
             year = int(m.group()) + year_offset
+            is_new_year = (year != current_year)
 
             # ¿Hay film válido en esta misma fila?
             if len(cells) >= 2:
-                film = _clean(cells[1].get_text())
-                if film.lower() not in SKIP_TEXTS:
-                    # Variante 1: año + ganadora en misma fila
+                films = _films_from_cell(cells[1])
+                if films:
+                    # Variante 1 (o 3): año + film(s) en misma fila
                     current_year = year
                     first_in_year = False
                     if current_year in years:
+                        # Solo la primera fila de cada año es la ganadora
+                        won_first = 1 if is_new_year else 0
                         records.append({
                             "ceremony_year": current_year,
-                            "film": film,
+                            "film": films[0],
                             "award": award_name,
-                            "won": 1,
+                            "won": won_first,
                         })
+                        # Films adicionales en la misma celda → nominados
+                        for film in films[1:]:
+                            records.append({
+                                "ceremony_year": current_year,
+                                "film": film,
+                                "award": award_name,
+                                "won": 0,
+                            })
                     continue
 
             # Variante 2: fila solo con año (sin film)
@@ -116,17 +144,32 @@ def scrape_award_from_url(
             # Fila sin año → nominada (o primera=ganadora si first_in_year)
             if current_year is None or current_year not in years:
                 continue
-            film = _clean(cells[0].get_text())
-            if film.lower() in SKIP_TEXTS:
+
+            films = _films_from_cell(cells[0])
+            if not films:
                 continue
-            won = 1 if first_in_year else 0
-            first_in_year = False
-            records.append({
-                "ceremony_year": current_year,
-                "film": film,
-                "award": award_name,
-                "won": won,
-            })
+
+            if len(films) > 1:
+                # Múltiples films en una sola celda → expandir cada uno
+                for i, film in enumerate(films):
+                    won = 1 if (first_in_year and i == 0) else 0
+                    records.append({
+                        "ceremony_year": current_year,
+                        "film": film,
+                        "award": award_name,
+                        "won": won,
+                    })
+                first_in_year = False
+            else:
+                film = films[0]
+                won = 1 if first_in_year else 0
+                first_in_year = False
+                records.append({
+                    "ceremony_year": current_year,
+                    "film": film,
+                    "award": award_name,
+                    "won": won,
+                })
 
     return records
 
