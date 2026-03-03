@@ -21,3 +21,9 @@ Scripts/__pycache__/config.cpython-313.pyc
 data/04_opening_week.csv
 Scripts/__pycache__/build_master.cpython-313.pyc
 .claude/worktrees/quirky-bassi/.claude/settings.local.json
+img/ace_plots.png
+img/permutation_test.png
+img/shap_waterfall_2025.png
+models/features.pkl
+models/lgbm_oscar.pkl
+img/shap_summary.png
