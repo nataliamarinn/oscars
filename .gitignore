@@ -30,3 +30,8 @@ img/shap_summary.png
 models/logreg_oscar.pkl
 models/scaler.pkl
 models/ranker_oscar.pkl
+img/text_model.png
+models/lr_text_oscar.pkl
+models/pca_text.pkl
+models/scaler_text.pkl
+models/synopsis_embeddings.npy
