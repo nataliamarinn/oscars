@@ -27,3 +27,5 @@ img/shap_waterfall_2025.png
 models/features.pkl
 models/lgbm_oscar.pkl
 img/shap_summary.png
+models/logreg_oscar.pkl
+models/scaler.pkl
