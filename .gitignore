@@ -29,3 +29,4 @@ models/lgbm_oscar.pkl
 img/shap_summary.png
 models/logreg_oscar.pkl
 models/scaler.pkl
+models/ranker_oscar.pkl
