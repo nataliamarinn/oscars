@@ -1,12 +1,10 @@
 """
 Ground truth: Oscar Best Picture nominees and winners.
-
+Extended to include 1978-2004 (historical period for EDA/storytelling).
 Ceremony year maps to the year the Oscars were held.
   e.g. ceremony_year=2024 → 96th Academy Awards → films from 2023.
-
 Each entry: (ceremony_year, film_title, won)
 """
-
 OSCAR_BEST_PICTURE: list[tuple[int, str, bool]] = [
     # ── 2025 (97th) ───────────────────────────────────────────────────────────
     (2025, "Anora", True),
@@ -19,7 +17,6 @@ OSCAR_BEST_PICTURE: list[tuple[int, str, bool]] = [
     (2025, "Nickel Boys", False),
     (2025, "The Substance", False),
     (2025, "Wicked", False),
-
     # ── 2024 (96th) ───────────────────────────────────────────────────────────
     (2024, "Oppenheimer", True),
     (2024, "American Fiction", False),
@@ -31,7 +28,6 @@ OSCAR_BEST_PICTURE: list[tuple[int, str, bool]] = [
     (2024, "Past Lives", False),
     (2024, "Poor Things", False),
     (2024, "Zone of Interest", False),
-
     # ── 2023 (95th) ───────────────────────────────────────────────────────────
     (2023, "Everything Everywhere All at Once", True),
     (2023, "All Quiet on the Western Front", False),
@@ -42,7 +38,6 @@ OSCAR_BEST_PICTURE: list[tuple[int, str, bool]] = [
     (2023, "Top Gun: Maverick", False),
     (2023, "Triangle of Sadness", False),
     (2023, "Women Talking", False),
-
     # ── 2022 (94th) ───────────────────────────────────────────────────────────
     (2022, "CODA", True),
     (2022, "Belfast", False),
@@ -54,7 +49,6 @@ OSCAR_BEST_PICTURE: list[tuple[int, str, bool]] = [
     (2022, "Nightmare Alley", False),
     (2022, "The Power of the Dog", False),
     (2022, "West Side Story", False),
-
     # ── 2021 (93rd) ───────────────────────────────────────────────────────────
     (2021, "Nomadland", True),
     (2021, "The Father", False),
@@ -64,7 +58,6 @@ OSCAR_BEST_PICTURE: list[tuple[int, str, bool]] = [
     (2021, "Promising Young Woman", False),
     (2021, "Sound of Metal", False),
     (2021, "The Trial of the Chicago 7", False),
-
     # ── 2020 (92nd) ───────────────────────────────────────────────────────────
     (2020, "Parasite", True),
     (2020, "Ford v Ferrari", False),
@@ -75,7 +68,6 @@ OSCAR_BEST_PICTURE: list[tuple[int, str, bool]] = [
     (2020, "Marriage Story", False),
     (2020, "1917", False),
     (2020, "Once Upon a Time in Hollywood", False),
-
     # ── 2019 (91st) ───────────────────────────────────────────────────────────
     (2019, "Green Book", True),
     (2019, "Black Panther", False),
@@ -85,7 +77,6 @@ OSCAR_BEST_PICTURE: list[tuple[int, str, bool]] = [
     (2019, "Roma", False),
     (2019, "A Star Is Born", False),
     (2019, "Vice", False),
-
     # ── 2018 (90th) ───────────────────────────────────────────────────────────
     (2018, "The Shape of Water", True),
     (2018, "Call Me by Your Name", False),
@@ -96,7 +87,6 @@ OSCAR_BEST_PICTURE: list[tuple[int, str, bool]] = [
     (2018, "Phantom Thread", False),
     (2018, "The Post", False),
     (2018, "Three Billboards Outside Ebbing, Missouri", False),
-
     # ── 2017 (89th) ───────────────────────────────────────────────────────────
     (2017, "Moonlight", True),
     (2017, "Arrival", False),
@@ -107,7 +97,6 @@ OSCAR_BEST_PICTURE: list[tuple[int, str, bool]] = [
     (2017, "La La Land", False),
     (2017, "Lion", False),
     (2017, "Manchester by the Sea", False),
-
     # ── 2016 (88th) ───────────────────────────────────────────────────────────
     (2016, "Spotlight", True),
     (2016, "The Big Short", False),
@@ -117,7 +106,6 @@ OSCAR_BEST_PICTURE: list[tuple[int, str, bool]] = [
     (2016, "The Martian", False),
     (2016, "The Revenant", False),
     (2016, "Room", False),
-
     # ── 2015 (87th) ───────────────────────────────────────────────────────────
     (2015, "Birdman", True),
     (2015, "American Sniper", False),
@@ -127,7 +115,6 @@ OSCAR_BEST_PICTURE: list[tuple[int, str, bool]] = [
     (2015, "Selma", False),
     (2015, "The Theory of Everything", False),
     (2015, "Whiplash", False),
-
     # ── 2014 (86th) ───────────────────────────────────────────────────────────
     (2014, "12 Years a Slave", True),
     (2014, "American Hustle", False),
@@ -138,7 +125,6 @@ OSCAR_BEST_PICTURE: list[tuple[int, str, bool]] = [
     (2014, "Nebraska", False),
     (2014, "Philomena", False),
     (2014, "The Wolf of Wall Street", False),
-
     # ── 2013 (85th) ───────────────────────────────────────────────────────────
     (2013, "Argo", True),
     (2013, "Amour", False),
@@ -149,7 +135,6 @@ OSCAR_BEST_PICTURE: list[tuple[int, str, bool]] = [
     (2013, "Lincoln", False),
     (2013, "Silver Linings Playbook", False),
     (2013, "Zero Dark Thirty", False),
-
     # ── 2012 (84th) ───────────────────────────────────────────────────────────
     (2012, "The Artist", True),
     (2012, "The Descendants", False),
@@ -160,7 +145,6 @@ OSCAR_BEST_PICTURE: list[tuple[int, str, bool]] = [
     (2012, "Moneyball", False),
     (2012, "The Tree of Life", False),
     (2012, "War Horse", False),
-
     # ── 2011 (83rd) ───────────────────────────────────────────────────────────
     (2011, "The King's Speech", True),
     (2011, "Black Swan", False),
@@ -172,7 +156,6 @@ OSCAR_BEST_PICTURE: list[tuple[int, str, bool]] = [
     (2011, "Toy Story 3", False),
     (2011, "True Grit", False),
     (2011, "Winter's Bone", False),
-
     # ── 2010 (82nd) ───────────────────────────────────────────────────────────
     (2010, "The Hurt Locker", True),
     (2010, "Avatar", False),
@@ -184,39 +167,216 @@ OSCAR_BEST_PICTURE: list[tuple[int, str, bool]] = [
     (2010, "A Serious Man", False),
     (2010, "Up", False),
     (2010, "Up in the Air", False),
-
     # ── 2009 (81st) ───────────────────────────────────────────────────────────
     (2009, "Slumdog Millionaire", True),
     (2009, "The Curious Case of Benjamin Button", False),
     (2009, "Frost/Nixon", False),
     (2009, "Milk", False),
     (2009, "The Reader", False),
-
     # ── 2008 (80th) ───────────────────────────────────────────────────────────
     (2008, "No Country for Old Men", True),
     (2008, "Atonement", False),
     (2008, "Juno", False),
     (2008, "Michael Clayton", False),
     (2008, "There Will Be Blood", False),
-
     # ── 2007 (79th) ───────────────────────────────────────────────────────────
     (2007, "The Departed", True),
     (2007, "Babel", False),
     (2007, "Letters from Iwo Jima", False),
     (2007, "Little Miss Sunshine", False),
     (2007, "The Queen", False),
-
     # ── 2006 (78th) ───────────────────────────────────────────────────────────
     (2006, "Crash", True),
     (2006, "Brokeback Mountain", False),
     (2006, "Capote", False),
     (2006, "Good Night, and Good Luck", False),
     (2006, "Munich", False),
-
     # ── 2005 (77th) ───────────────────────────────────────────────────────────
     (2005, "Million Dollar Baby", True),
     (2005, "The Aviator", False),
     (2005, "Finding Neverland", False),
     (2005, "Ray", False),
     (2005, "Sideways", False),
+    # ── 2004 (76th) ───────────────────────────────────────────────────────────
+    (2004, "The Lord of the Rings: The Return of the King", True),
+    (2004, "Lost in Translation", False),
+    (2004, "Master and Commander: The Far Side of the World", False),
+    (2004, "Mystic River", False),
+    (2004, "Seabiscuit", False),
+    # ── 2003 (75th) ───────────────────────────────────────────────────────────
+    (2003, "Chicago", True),
+    (2003, "Gangs of New York", False),
+    (2003, "The Hours", False),
+    (2003, "The Pianist", False),
+    (2003, "The Two Towers", False),
+    # ── 2002 (74th) ───────────────────────────────────────────────────────────
+    (2002, "A Beautiful Mind", True),
+    (2002, "Gosford Park", False),
+    (2002, "In the Bedroom", False),
+    (2002, "The Lord of the Rings: The Fellowship of the Ring", False),
+    (2002, "Moulin Rouge!", False),
+    # ── 2001 (73rd) ───────────────────────────────────────────────────────────
+    (2001, "Gladiator", True),
+    (2001, "Chocolat", False),
+    (2001, "Crouching Tiger, Hidden Dragon", False),
+    (2001, "Erin Brockovich", False),
+    (2001, "Traffic", False),
+    # ── 2000 (72nd) ───────────────────────────────────────────────────────────
+    (2000, "American Beauty", True),
+    (2000, "The Cider House Rules", False),
+    (2000, "The Green Mile", False),
+    (2000, "The Insider", False),
+    (2000, "The Sixth Sense", False),
+    # ── 1999 (71st) ───────────────────────────────────────────────────────────
+    (1999, "Shakespeare in Love", True),
+    (1999, "Elizabeth", False),
+    (1999, "Life Is Beautiful", False),
+    (1999, "Saving Private Ryan", False),
+    (1999, "The Thin Red Line", False),
+    # ── 1998 (70th) ───────────────────────────────────────────────────────────
+    (1998, "Titanic", True),
+    (1998, "As Good as It Gets", False),
+    (1998, "The Full Monty", False),
+    (1998, "Good Will Hunting", False),
+    (1998, "L.A. Confidential", False),
+    # ── 1997 (69th) ───────────────────────────────────────────────────────────
+    (1997, "The English Patient", True),
+    (1997, "Fargo", False),
+    (1997, "Jerry Maguire", False),
+    (1997, "Secrets & Lies", False),
+    (1997, "Shine", False),
+    # ── 1996 (68th) ───────────────────────────────────────────────────────────
+    (1996, "Braveheart", True),
+    (1996, "Apollo 13", False),
+    (1996, "Babe", False),
+    (1996, "Il Postino", False),
+    (1996, "Sense and Sensibility", False),
+    # ── 1995 (67th) ───────────────────────────────────────────────────────────
+    (1995, "Forrest Gump", True),
+    (1995, "Four Weddings and a Funeral", False),
+    (1995, "Pulp Fiction", False),
+    (1995, "Quiz Show", False),
+    (1995, "The Shawshank Redemption", False),
+    # ── 1994 (66th) ───────────────────────────────────────────────────────────
+    (1994, "Schindler's List", True),
+    (1994, "The Fugitive", False),
+    (1994, "In the Name of the Father", False),
+    (1994, "The Piano", False),
+    (1994, "The Remains of the Day", False),
+    # ── 1993 (65th) ───────────────────────────────────────────────────────────
+    (1993, "Unforgiven", True),
+    (1993, "The Crying Game", False),
+    (1993, "A Few Good Men", False),
+    (1993, "Howards End", False),
+    (1993, "Scent of a Woman", False),
+    # ── 1992 (64th) ───────────────────────────────────────────────────────────
+    (1992, "The Silence of the Lambs", True),
+    (1992, "Bugsy", False),
+    (1992, "Beauty and the Beast", False),
+    (1992, "JFK", False),
+    (1992, "Thelma & Louise", False),
+    # ── 1991 (63rd) ───────────────────────────────────────────────────────────
+    (1991, "Dances with Wolves", True),
+    (1991, "Awakenings", False),
+    (1991, "Ghost", False),
+    (1991, "The Godfather Part III", False),
+    (1991, "GoodFellas", False),
+    # ── 1990 (62nd) ───────────────────────────────────────────────────────────
+    (1990, "Driving Miss Daisy", True),
+    (1990, "Born on the Fourth of July", False),
+    (1990, "Dead Poets Society", False),
+    (1990, "Field of Dreams", False),
+    (1990, "My Left Foot", False),
+    # ── 1989 (61st) ───────────────────────────────────────────────────────────
+    (1989, "Rain Man", True),
+    (1989, "The Accidental Tourist", False),
+    (1989, "Dangerous Liaisons", False),
+    (1989, "Mississippi Burning", False),
+    (1989, "Working Girl", False),
+    # ── 1988 (60th) ───────────────────────────────────────────────────────────
+    (1988, "The Last Emperor", True),
+    (1988, "Broadcast News", False),
+    (1988, "Fatal Attraction", False),
+    (1988, "Hope and Glory", False),
+    (1988, "Moonstruck", False),
+    # ── 1987 (59th) ───────────────────────────────────────────────────────────
+    (1987, "Platoon", True),
+    (1987, "Children of a Lesser God", False),
+    (1987, "Hannah and Her Sisters", False),
+    (1987, "The Mission", False),
+    (1987, "A Room with a View", False),
+    # ── 1986 (58th) ───────────────────────────────────────────────────────────
+    (1986, "Out of Africa", True),
+    (1986, "The Color Purple", False),
+    (1986, "Kiss of the Spider Woman", False),
+    (1986, "Prizzi's Honor", False),
+    (1986, "Witness", False),
+    # ── 1985 (57th) ───────────────────────────────────────────────────────────
+    (1985, "Amadeus", True),
+    (1985, "The Killing Fields", False),
+    (1985, "A Passage to India", False),
+    (1985, "Places in the Heart", False),
+    (1985, "A Soldier's Story", False),
+    # ── 1984 (56th) ───────────────────────────────────────────────────────────
+    (1984, "Terms of Endearment", True),
+    (1984, "The Big Chill", False),
+    (1984, "The Dresser", False),
+    (1984, "The Right Stuff", False),
+    (1984, "Tender Mercies", False),
+    # ── 1983 (55th) ───────────────────────────────────────────────────────────
+    (1983, "Gandhi", True),
+    (1983, "E.T. the Extra-Terrestrial", False),
+    (1983, "Missing", False),
+    (1983, "Tootsie", False),
+    (1983, "The Verdict", False),
+    # ── 1982 (54th) ───────────────────────────────────────────────────────────
+    (1982, "Chariots of Fire", True),
+    (1982, "Atlantic City", False),
+    (1982, "On Golden Pond", False),
+    (1982, "Raiders of the Lost Ark", False),
+    (1982, "Reds", False),
+    # ── 1981 (53rd) ───────────────────────────────────────────────────────────
+    (1981, "Ordinary People", True),
+    (1981, "Coal Miner's Daughter", False),
+    (1981, "The Elephant Man", False),
+    (1981, "Raging Bull", False),
+    (1981, "Tess", False),
+    # ── 1980 (52nd) ───────────────────────────────────────────────────────────
+    (1980, "Kramer vs. Kramer", True),
+    (1980, "All That Jazz", False),
+    (1980, "Apocalypse Now", False),
+    (1980, "Breaking Away", False),
+    (1980, "Norma Rae", False),
+    # ── 1979 (51st) ───────────────────────────────────────────────────────────
+    (1979, "The Deer Hunter", True),
+    (1979, "Coming Home", False),
+    (1979, "Heaven Can Wait", False),
+    (1979, "Midnight Express", False),
+    (1979, "An Unmarried Woman", False),
+    # ── 1978 (50th) ───────────────────────────────────────────────────────────
+    (1978, "Annie Hall", True),
+    (1978, "The Goodbye Girl", False),
+    (1978, "Julia", False),
+    (1978, "Network", False),
+    (1978, "Star Wars", False),
+    # ── 2026 (98th) — 15 marzo 2026 — AÚN NO OCURRIÓ ────────────────────
+    (2026, "Bugonia", False),
+    (2026, "F1", False),
+    (2026, "Frankenstein", False),
+    (2026, "Hamnet", False),
+    (2026, "Marty Supreme", False),
+    (2026, "One Battle After Another", False),
+    (2026, "The Secret Agent", False),
+    (2026, "Sentimental Value", False),
+    (2026, "Sinners", False),
+    (2026, "Train Dreams", False),
 ]
+
+if __name__ == "__main__":
+    import pandas as pd
+    df = pd.DataFrame(OSCAR_BEST_PICTURE, columns=["ceremony_year", "nominated_title", "won_best_picture"])
+    df["won_best_picture"] = df["won_best_picture"].astype(int)
+    print(f"Total películas: {len(df)}")
+    print(f"Años: {df['ceremony_year'].min()} - {df['ceremony_year'].max()}")
+    print(f"Ganadoras: {df['won_best_picture'].sum()}")
+    print(df.groupby("ceremony_year").size().describe())

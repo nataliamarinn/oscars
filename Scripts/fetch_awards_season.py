@@ -24,7 +24,7 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
-from Scripts.config import DATA_DIR
+from config import DATA_DIR
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -253,7 +253,7 @@ def build_awards_season_df(years: list[int]) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    from Scripts.config import YEARS
+    from config import YEARS
     df = build_awards_season_df(YEARS)
     print(df.head(10))
     print(df.columns.tolist())
