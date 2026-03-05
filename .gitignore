@@ -35,3 +35,4 @@ models/lr_text_oscar.pkl
 models/pca_text.pkl
 models/scaler_text.pkl
 models/synopsis_embeddings.npy
+Scripts/__pycache__/nominees_ground_truth.cpython-313.pyc

@@ -15,7 +15,7 @@ import pandas as pd
 import numpy as np
 from rapidfuzz import process, fuzz
 
-from Scripts.config import DATA_DIR
+from config import DATA_DIR
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -129,7 +129,7 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
         except Exception:
             return 0
 
-    for genre in ["Drama", "Comedy", "Biography", "History", "Romance", "Thriller", "War"]:
+    for genre in ["Drama", "Comedy", "Biography", "History", "Romance", "Thriller", "War", "Crime", "Music", "Adventure", "Mystery", "Western"]:
         df[f"genre_{genre.lower()}"] = df["genres"].apply(lambda g: _has_genre(g, genre))
 
     # ── Critic composite ──────────────────────────────────────────────────
@@ -204,3 +204,4 @@ if __name__ == "__main__":
         "days_to_ceremony",
     ]
     print(df[[c for c in key_cols if c in df.columns]].head())
+
