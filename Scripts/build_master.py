@@ -54,23 +54,43 @@ def fuzzy_match_films(
     left: pd.DataFrame,
     right: pd.DataFrame,
     threshold: int = 82,
+    year_slack: int = 1,
 ) -> pd.DataFrame:
+    """
+    Fuzzy-match films in `right` (awards data) to nominated titles in `left` (Oscar df).
+
+    year_slack=1 tolerates ±1 year offset between award-scraper ceremony_year and Oscar
+    ceremony_year (different awards use different year conventions on Wikipedia).
+    After a match, ceremony_year in `right` is normalized to the Oscar year so the
+    subsequent merge on ["ceremony_year", "nominated_title"] succeeds.
+    """
     right = right.copy()
     right["nominated_title"] = None
+    matched_count = 0
 
-    for year in left["ceremony_year"].unique():
-        left_titles  = left.loc[left["ceremony_year"] == year, "nominated_title"].tolist()
-        right_mask   = right["ceremony_year"] == year
-        right_titles = right.loc[right_mask, "film"].tolist()
+    for year in sorted(left["ceremony_year"].astype(int).unique()):
+        left_titles = left.loc[left["ceremony_year"] == year, "nominated_title"].tolist()
+        if not left_titles:
+            continue
 
-        for r_title in right_titles:
-            match, score, _ = process.extractOne(
-                r_title, left_titles, scorer=fuzz.token_sort_ratio
-            )
-            if score >= threshold:
-                right.loc[(right["ceremony_year"] == year) & (right["film"] == r_title),
-                          "nominated_title"] = match
+        for dy in range(-year_slack, year_slack + 1):
+            search_year = year + dy
+            mask = right["ceremony_year"].astype(int) == search_year
+            unmatched_films = right.loc[mask & right["nominated_title"].isna(), "film"].tolist()
 
+            for r_title in unmatched_films:
+                result = process.extractOne(r_title, left_titles, scorer=fuzz.token_sort_ratio)
+                if result is None:
+                    continue
+                match, score, _ = result
+                if score >= threshold:
+                    idx = mask & (right["film"] == r_title)
+                    right.loc[idx, "nominated_title"] = match
+                    # Normalize year to Oscar ceremony year so the merge key matches
+                    right.loc[idx, "ceremony_year"] = year
+                    matched_count += 1
+
+    log.info(f"fuzzy_match_films: {matched_count} filas de awards emparejadas")
     return right
 
 
@@ -101,9 +121,7 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     df["days_to_ceremony"] = (ceremony_dt - release_dt).dt.days
 
     # ── Idioma ────────────────────────────────────────────────────────────
-    df["main_language"] = df["language"].str.split(",").str[0].str.strip()
-    df["is_english"]    = df["main_language"].str.contains("English", na=False).astype(int)
-    
+    df["is_english"] = (df["original_language"] == "en").astype(int)
 
     # ── Awards season: total wins / noms ─────────────────────────────────
     award_won_cols = [c for c in df.columns if c.endswith("_won")]
