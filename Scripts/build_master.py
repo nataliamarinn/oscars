@@ -15,13 +15,43 @@ import pandas as pd
 import numpy as np
 from rapidfuzz import process, fuzz   # pip install rapidfuzz
 
-from Scripts.config import DATA_DIR
+try:
+    from config import DATA_DIR
+except ImportError:
+    from Scripts.config import DATA_DIR
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
 # ── Fechas históricas de las ceremonias de los Oscars ────────────────────────
 CEREMONY_DATES = {
+    1978: "1978-04-03",
+    1979: "1979-04-09",
+    1980: "1980-04-14",
+    1981: "1981-03-31",
+    1982: "1982-03-29",
+    1983: "1983-04-11",
+    1984: "1984-04-09",
+    1985: "1985-03-25",
+    1986: "1986-03-24",
+    1987: "1987-03-30",
+    1988: "1988-04-11",
+    1989: "1989-03-29",
+    1990: "1990-03-26",
+    1991: "1991-03-25",
+    1992: "1992-03-30",
+    1993: "1993-03-29",
+    1994: "1994-03-21",
+    1995: "1995-03-27",
+    1996: "1996-03-25",
+    1997: "1997-03-24",
+    1998: "1998-03-23",
+    1999: "1999-03-21",
+    2000: "2000-03-26",
+    2001: "2001-03-25",
+    2002: "2002-03-24",
+    2003: "2003-03-23",
+    2004: "2004-02-29",
     2005: "2005-02-27",
     2006: "2006-03-05",
     2007: "2007-02-25",
@@ -56,14 +86,6 @@ def fuzzy_match_films(
     threshold: int = 82,
     year_slack: int = 1,
 ) -> pd.DataFrame:
-    """
-    Fuzzy-match films in `right` (awards data) to nominated titles in `left` (Oscar df).
-
-    year_slack=1 tolerates ±1 year offset between award-scraper ceremony_year and Oscar
-    ceremony_year (different awards use different year conventions on Wikipedia).
-    After a match, ceremony_year in `right` is normalized to the Oscar year so the
-    subsequent merge on ["ceremony_year", "nominated_title"] succeeds.
-    """
     right = right.copy()
     right["nominated_title"] = None
     matched_count = 0
@@ -79,14 +101,13 @@ def fuzzy_match_films(
             unmatched_films = right.loc[mask & right["nominated_title"].isna(), "film"].tolist()
 
             for r_title in unmatched_films:
-                result = process.extractOne(r_title, left_titles, scorer=fuzz.WRatio)
+                result = process.extractOne(r_title, left_titles, scorer=fuzz.token_sort_ratio)
                 if result is None:
                     continue
                 match, score, _ = result
                 if score >= threshold:
                     idx = mask & (right["film"] == r_title)
                     right.loc[idx, "nominated_title"] = match
-                    # Normalize year to Oscar ceremony year so the merge key matches
                     right.loc[idx, "ceremony_year"] = year
                     matched_count += 1
 
@@ -120,7 +141,7 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     df["main_language"] = df["language"].str.split(",").str[0].str.strip()
 
     # ── Awards season: total wins / noms ─────────────────────────────────
-    award_won_cols = [c for c in df.columns if c.endswith("_won")]
+    award_won_cols = [c for c in df.columns if c.endswith("_won") and c != "won_best_picture"]
     award_nom_cols = [c for c in df.columns if c.endswith("_nominated")]
     df["total_precursor_wins"] = df[award_won_cols].sum(axis=1) if award_won_cols else 0
     df["total_precursor_noms"] = df[award_nom_cols].sum(axis=1) if award_nom_cols else 0
@@ -134,7 +155,7 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
 
     df["omdb_oscar_wins"] = df["omdb_awards"].apply(_extract_oscar_wins)
 
-    # ── Días entre estreno y ceremonia ───────────────────────────────────
+    # ── Días entre estreno y ceremonia ────────────────────────────────────
     release_dt  = pd.to_datetime(df["release_date"], errors="coerce")
     ceremony_dt = pd.to_datetime(df["ceremony_year"].map(CEREMONY_DATES), errors="coerce")
     df["days_to_ceremony"] = (ceremony_dt - release_dt).dt.days
@@ -158,9 +179,8 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
 
     for genre in TOP_GENRES:
         col = "genre_" + genre.lower().replace(" ", "_")
-        df[col] = parsed.apply(lambda gs: int(genre in gs))
+        df[col] = parsed.apply(lambda gs, g=genre: int(g in gs))
 
-    # main_genre: first genre that appears in TOP_GENRES priority list, else first genre
     def _main_genre(gs: list) -> str:
         for g in TOP_GENRES:
             if g in gs:
@@ -205,6 +225,13 @@ def build_master() -> pd.DataFrame:
     awards_matched = awards_matched.dropna(subset=["nominated_title"])
     awards_matched = awards_matched.drop(columns=["film"])
 
+    # Deduplicar: si un film matcheó desde varios años, quedarse con el max
+    award_cols_aw = [c for c in awards_matched.columns
+                     if c.endswith("_won") or c.endswith("_nominated")]
+    awards_matched = awards_matched.groupby(
+        ["ceremony_year", "nominated_title"], as_index=False
+    )[award_cols_aw].max()
+
     df = df.merge(
         awards_matched,
         on=["ceremony_year", "nominated_title"],
@@ -219,7 +246,7 @@ def build_master() -> pd.DataFrame:
     # ── Feature engineering ───────────────────────────────────────────────
     df = engineer_features(df)
 
-    # ── Guardar solo CSV ──────────────────────────────────────────────────
+    # ── Guardar ───────────────────────────────────────────────────────────
     out_csv = data_dir / "master_dataset.csv"
     df.to_csv(out_csv, index=False)
     log.info(f"Master dataset guardado: {df.shape[0]} filas x {df.shape[1]} cols")
@@ -238,5 +265,6 @@ if __name__ == "__main__":
         "imdb_rating", "rt_score", "metacritic",
         "budget_m", "revenue_m",
         "total_precursor_wins", "critic_composite",
+        "days_to_ceremony",
     ]
     print(df[[c for c in key_cols if c in df.columns]].head())
