@@ -20,6 +20,31 @@ from Scripts.config import DATA_DIR
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
+# ── Fechas históricas de las ceremonias de los Oscars ────────────────────────
+CEREMONY_DATES = {
+    2005: "2005-02-27",
+    2006: "2006-03-05",
+    2007: "2007-02-25",
+    2008: "2008-02-24",
+    2009: "2009-02-22",
+    2010: "2010-03-07",
+    2011: "2011-02-27",
+    2012: "2012-02-26",
+    2013: "2013-02-24",
+    2014: "2014-03-02",
+    2015: "2015-02-22",
+    2016: "2016-02-28",
+    2017: "2017-02-26",
+    2018: "2018-03-04",
+    2019: "2019-02-24",
+    2020: "2020-02-09",
+    2021: "2021-04-25",
+    2022: "2022-03-27",
+    2023: "2023-03-12",
+    2024: "2024-03-10",
+    2025: "2025-03-02",
+}
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  Fuzzy merge helper
@@ -54,7 +79,7 @@ def fuzzy_match_films(
             unmatched_films = right.loc[mask & right["nominated_title"].isna(), "film"].tolist()
 
             for r_title in unmatched_films:
-                result = process.extractOne(r_title, left_titles, scorer=fuzz.token_sort_ratio)
+                result = process.extractOne(r_title, left_titles, scorer=fuzz.WRatio)
                 if result is None:
                     continue
                 match, score, _ = result
@@ -109,17 +134,40 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
 
     df["omdb_oscar_wins"] = df["omdb_awards"].apply(_extract_oscar_wins)
 
-    # ── Genre flags ───────────────────────────────────────────────────────
-    def _has_genre(genres_json, genre: str) -> int:
-        if not genres_json or pd.isna(genres_json):
-            return 0
-        try:
-            return int(genre in json.loads(genres_json))
-        except Exception:
-            return 0
+    # ── Días entre estreno y ceremonia ───────────────────────────────────
+    release_dt  = pd.to_datetime(df["release_date"], errors="coerce")
+    ceremony_dt = pd.to_datetime(df["ceremony_year"].map(CEREMONY_DATES), errors="coerce")
+    df["days_to_ceremony"] = (ceremony_dt - release_dt).dt.days
 
-    for genre in ["Drama", "Comedy", "Biography", "History", "Romance", "Thriller", "War"]:
-        df[f"genre_{genre.lower()}"] = df["genres"].apply(lambda g: _has_genre(g, genre))
+    # ── Genre flags ───────────────────────────────────────────────────────
+    TOP_GENRES = [
+        "Drama", "Comedy", "Biography", "History", "Romance",
+        "Thriller", "War", "Crime", "Music", "Adventure",
+        "Mystery", "Western", "Science Fiction",
+    ]
+
+    def _parse_genres(genres_json) -> list:
+        if not genres_json or pd.isna(genres_json):
+            return []
+        try:
+            return json.loads(genres_json)
+        except Exception:
+            return []
+
+    parsed = df["genres"].apply(_parse_genres)
+
+    for genre in TOP_GENRES:
+        col = "genre_" + genre.lower().replace(" ", "_")
+        df[col] = parsed.apply(lambda gs: int(genre in gs))
+
+    # main_genre: first genre that appears in TOP_GENRES priority list, else first genre
+    def _main_genre(gs: list) -> str:
+        for g in TOP_GENRES:
+            if g in gs:
+                return g
+        return gs[0] if gs else "Unknown"
+
+    df["main_genre"] = parsed.apply(_main_genre)
 
     # ── Critic composite ──────────────────────────────────────────────────
     df["rt_norm"]         = pd.to_numeric(df["rt_score"], errors="coerce")
