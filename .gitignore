@@ -53,3 +53,10 @@ img/precursors_analysis.png
 img/runtime_analysis.png
 .claude/worktrees/naughty-jemison/.claude/settings.local.json
 scrollytelling.html
+img/text_val_years.png
+img/topic_winrate.png
+img/topics_model_all_years.png
+models/lda_oscar.pkl
+models/lr_topics_oscar.pkl
+models/pca_topics.pkl
+models/vectorizer_lda.pkl
