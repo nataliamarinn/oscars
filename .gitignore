@@ -60,3 +60,13 @@ models/lda_oscar.pkl
 models/lr_topics_oscar.pkl
 models/pca_topics.pkl
 models/vectorizer_lda.pkl
+.claude/worktrees/naughty-jemison/nul
+img/cinema.jpg
+img/directores.jpg
+img/estatuilla.jpg
+img/fondo.jpg
+img/indicadores.png
+img/lenguajes.jpg
+img/leo.jpg
+img/oscars.jpg
+img/the_end.jpg
