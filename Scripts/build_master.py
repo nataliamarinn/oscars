@@ -115,7 +115,7 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     df["main_language"] = df["language"].str.split(",").str[0].str.strip()
 
     # ── Awards season: total wins / noms ─────────────────────────────────
-    award_won_cols = [c for c in df.columns if c.endswith("_won")]
+    award_won_cols = [c for c in df.columns if c.endswith("_won") and c != "won_best_picture"]
     award_nom_cols = [c for c in df.columns if c.endswith("_nominated")]
     df["total_precursor_wins"] = df[award_won_cols].sum(axis=1) if award_won_cols else 0
     df["total_precursor_noms"] = df[award_nom_cols].sum(axis=1) if award_nom_cols else 0
